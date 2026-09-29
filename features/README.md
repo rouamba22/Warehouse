@@ -16,7 +16,14 @@ No application code may be written unless it maps to a requirement in one of the
 
 | ID | File | Branch | Depends on |
 |----|------|--------|------------|
-| — | *Add `feature-1-….md` before implementation* | `feature/1-…` | — |
+| 1 | [feature-1-staff-login-access.md](./feature-1-staff-login-access.md) | `feature/1-staff-login-access` | — |
+| 2 | [feature-2-customer-management.md](./feature-2-customer-management.md) | `feature/2-customer-management` | Feature 1 |
+| 3 | [feature-3-supplier-management.md](./feature-3-supplier-management.md) | `feature/3-supplier-management` | Feature 1 |
+| 4 | [feature-4-item-management.md](./feature-4-item-management.md) | `feature/4-item-management` | Feature 1, Feature 3 |
+| 5 | [feature-5-supplier-ordering-receiving.md](./feature-5-supplier-ordering-receiving.md) | `feature/5-supplier-ordering-receiving` | Feature 1, Feature 3, Feature 4 |
+| 6 | [feature-6-customer-order-management.md](./feature-6-customer-order-management.md) | `feature/6-customer-order-management` | Feature 1, Feature 2, Feature 4 |
+| 7 | [feature-7-inventory-count-adjustment.md](./feature-7-inventory-count-adjustment.md) | `feature/7-inventory-count-adjustment` | Feature 1, Feature 4 |
+| 8 | [feature-8-shipping-delivery.md](./feature-8-shipping-delivery.md) | `feature/8-shipping-delivery` | Feature 1, Feature 6 |
 
 New features: follow [framework.md](./framework.md#feature-spec-template) — **Status**, **Input**, **FR-00N**, **SC-00N**, **Key Entities**, Gherkin, **Agent implementation request**, **Definition of Done**.
 
