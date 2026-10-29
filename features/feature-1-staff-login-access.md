@@ -205,7 +205,7 @@ Sessions do not expire automatically; a session is removed only when the staff m
 * **Then** I only see **Shipping & Delivery**
 * **And** I cannot open Inventory, Customer Management, or Supplier Management
 
-#### Scenario: A Warehouse Worker is blocked from an Office-only screen
+#### Scenario: A Warehouse Worker is blocked from Supplier Management
 * **Given** I am logged in as a Warehouse Worker
 * **When** I try to open the Supplier Management screen directly by its link
 * **Then** the system blocks it and shows `You do not have permission to perform this action.`
@@ -231,7 +231,8 @@ Warehouse data is shared. A worker does not own their own private copy of staff 
 
 | Action | Who |
 |--------|-----|
-| Read the staff list | Manager |
+| Read the full staff list | Manager |
+| Read active drivers only (`id`, `firstName`, `lastName`, `employeeId`) | Manager and Office Staff, so Feature 8 can assign a driver |
 | Add a staff account | Manager |
 | Turn an account off | Manager, and not their own account |
 | Log in, refresh, log out | Any staff member, for their own session |
@@ -241,14 +242,15 @@ The API never returns `pin`. A wrong role gets `403` and `You do not have permis
 
 ## API Requirements
 
-Base path: `/warehouse`. Errors are `{ "message": "..." }`. Success returns the record itself, not a wrapper. The PIN hash is never in a response. Login and session check do not need a token. Every other route does. Send `Authorization: Bearer <token>`.
+Base path: `/warehouse`. Errors are `{ "message": "..." }`. Success returns the record itself, not a wrapper. The PIN hash is never in a response. Login and session check do not need a token. Every other route does. Send `Authorization: Bearer <token>`. JSON `role` values are `manager`, `office_staff`, `warehouse_worker`, and `driver`. The screens show those as Manager, Office Staff, Warehouse Worker, and Driver.
 
 | Method | Path | Auth | Success | Errors |
 |--------|------|------|---------|--------|
 | POST | `/warehouse/login` | No | `200` `{ token, employeeId, firstName, lastName, role }` | `400` `Please fill in all required fields.` · `401` `Invalid Employee ID or PIN.` · `403` `This account has been deactivated.` |
 | GET | `/warehouse/session` | Yes | `200` same staff fields as login, no token | `401` no session |
 | POST | `/warehouse/logout` | Yes | `200` `{ message: "Logged out." }` | `401` no session |
-| GET | `/warehouse/staff` | Yes | `200` array of staff, no `pin` | `401` · `403` permission message |
+| GET | `/warehouse/staff` | Yes | `200` array of staff, no `pin`. Manager only | `401` · `403` permission message |
+| GET | `/warehouse/staff?role=driver` | Yes | `200` active drivers only: `id`, `firstName`, `lastName`, `employeeId`. Manager and Office Staff | `403` |
 | POST | `/warehouse/staff` | Yes | `201` the new staff row, no `pin` | `400` `Please fill in all required fields.` or `That Employee ID is already in use.` · `403` |
 | PATCH | `/warehouse/staff/:id/deactivate` | Yes | `200` staff row with `isActive: false` | `400` `You cannot turn off your own account.` · `403` · `404` `No staff member found.` |
 

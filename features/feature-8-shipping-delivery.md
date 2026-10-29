@@ -78,14 +78,14 @@
 - **FR-006**: When an order is marked delivered, the system MUST set its status to Completed and record the date delivered and who received it.
 - **FR-007**: Office Staff MUST be able to mark a ready pickup order as picked up, entering the name of the person who picked it up.
 - **FR-008**: When a pickup order is marked picked up, the system MUST set its status to Completed and record the date and who picked it up.
-- **FR-009**: The system MUST NOT let anyone who is not Office Staff assign a Driver to an order.
+- **FR-009**: The system MUST NOT let a Driver or a Warehouse Worker assign a Driver to an order. A Manager MAY assign a Driver, same as Office Staff.
 - **FR-010**: The system MUST NOT let anyone who is not a Driver mark a delivery as delivered.
 
 ---
 
 ## Assumptions
 
-- A Manager may do the Office Staff actions on this feature (assign a driver and mark a pickup). The Gherkin blocks a Driver from assigning and blocks Office Staff from marking a delivery delivered.
+- A Manager may assign a Driver and mark a pickup, same as Office Staff. Marking a delivery delivered stays with the Driver, because that person is the one who handed the order over.
 - The Driver list shows only staff with role `driver` and `isActive` true.
 - A Driver sees only orders assigned to them, not every delivery.
 - "Date shipped" is the date and time the driver was assigned. "Date delivered" is `completedAt`.

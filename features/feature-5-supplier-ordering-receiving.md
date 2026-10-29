@@ -50,7 +50,7 @@ The requirements file for this feature was empty on the requirements branch. Thi
 - **FR-003**: The line cost MUST be copied from the item's unit cost at the time of the order. The order total MUST be the sum of quantity times unit cost.
 - **FR-004**: The order total MUST be at least the supplier's minimum order amount.
 - **FR-005**: A new supplier order MUST start with status `open`.
-- **FR-006**: Only a Warehouse Worker MUST be allowed to receive an open supplier order.
+- **FR-006**: A Warehouse Worker or a Manager MUST be allowed to receive an open supplier order.
 - **FR-007**: Receiving MUST record the quantity received and the bin for each line, add the quantity received to `qtyOnHand`, and set the order status to `received`.
 - **FR-008**: A Warehouse Worker MUST NOT see unit cost or the order total.
 - **FR-009**: The system MUST NOT let Office Staff or a Driver create or receive a supplier order.
@@ -62,7 +62,7 @@ The requirements file for this feature was empty on the requirements branch. Thi
 - One receive action closes the whole order. Partial receives are out of scope.
 - The worker can confirm a quantity of `0` on a line if that item did not arrive. Quantity on hand does not change for that line.
 - The bin entered at receive updates the item's `binLocation`.
-- The Manager can see open orders. The Warehouse Worker sees open orders as a receive list, without money fields.
+- The Manager can see open orders, including cost, and can receive a shipment. The Warehouse Worker sees the same open orders as a receive list, without money fields.
 
 ## Edge Cases
 
@@ -155,8 +155,8 @@ The requirements file for this feature was empty on the requirements branch. Thi
 * **When** I try to create a supplier order
 * **Then** the system blocks it and shows `You do not have permission to perform this action.`
 
-#### Scenario: Manager tries to receive a shipment
-* **Given** I am logged in as a Manager
+#### Scenario: Driver tries to receive a shipment
+* **Given** I am logged in as a Driver
 * **When** I try to receive a supplier order
 * **Then** the system blocks it and shows `You do not have permission to perform this action.`
 
@@ -168,7 +168,7 @@ The supplier order is shared warehouse data. Money fields stay with the Manager.
 
 | Action | Who |
 |--------|-----|
-| Create a supplier order, see cost and total | Manager |
+| Create a supplier order, see cost and total, receive | Manager |
 | See open orders without cost, receive them | Warehouse Worker |
 | Create or receive | Not Office Staff, not Driver |
 
@@ -191,7 +191,7 @@ Receive body: `{ "lines": [ { "lineId": 1, "qtyReceived": 10, "binLocation": "A-
 | Screen | Route | Who | Picture |
 |--------|-------|-----|---------|
 | New supplier order | `/supplier-orders` | Manager | [supplier-order.svg](../docs/ui/supplier-order.svg) |
-| Receive | `/supplier-orders/:id/receive` | Warehouse Worker | [receive.svg](../docs/ui/receive.svg) |
+| Receive | `/supplier-orders/:id/receive` | Warehouse Worker, Manager | [receive.svg](../docs/ui/receive.svg) |
 
 - Manager labels: **Supplier**, **Item number**, **Quantity**, **Order total**, button **Place order**.
 - Worker labels: **Item number**, **Qty ordered**, **Qty received**, **Bin**, button **Receive shipment**. No cost and no order total.
@@ -211,4 +211,3 @@ Receive body: `{ "lines": [ { "lineId": 1, "qtyReceived": 10, "binLocation": "A-
 *   Partial receive across more than one day
 *   Sending the order to the supplier by email
 *   Returns to the supplier
-*   A Manager receiving the shipment (the Worker does that)

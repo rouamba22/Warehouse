@@ -54,13 +54,13 @@ The requirements file for this feature was empty on the requirements branch. Thi
 
 ## Functional Requirements
 
-- **FR-001**: Only Office Staff MUST be allowed to create a customer order. A Manager MAY also create one.
+- **FR-001**: Office Staff and a Manager MUST be allowed to create a customer order. A Warehouse Worker and a Driver MUST NOT.
 - **FR-002**: The customer lookup on this screen MUST return customer ID and business name only. It MUST NOT return address, contact, phone, billing terms, or credit limit.
 - **FR-003**: An order MUST use an active customer, a type of `delivery` or `pickup`, and at least one active item with a quantity greater than 0.
 - **FR-004**: For a delivery, the system MUST copy the customer's address onto the order and MUST NOT show that address to Office Staff.
 - **FR-005**: A new order MUST start with status `pending`.
 - **FR-006**: The system MUST NOT create an order line when quantity on hand is less than the quantity ordered. It shows `Not enough on hand.`
-- **FR-007**: Only a Warehouse Worker MUST pick an order. The pick list MUST show item number, description, bin, and quantity. It MUST NOT show customer name, phone, address, or billing terms.
+- **FR-007**: A Warehouse Worker or a Manager MUST be allowed to pick an order. The pick list MUST show item number, description, bin, and quantity. It MUST NOT show customer name, phone, address, or billing terms. Office Staff and a Driver MUST NOT pick.
 - **FR-008**: When the pick is finished, the system MUST subtract each line quantity from `qtyOnHand` and set the order status to `ready`.
 
 ---
@@ -68,7 +68,7 @@ The requirements file for this feature was empty on the requirements branch. Thi
 ## Assumptions
 
 - One pick finishes the whole order. Partial picks are out of scope.
-- Office Staff and Managers may create orders. Only a Warehouse Worker may pick.
+- Office Staff and a Manager may create orders. A Warehouse Worker or a Manager may pick. The pick screen stays item, bin, and quantity for both.
 - The copied delivery address is stored for Feature 8. Drivers see it there. Office Staff do not see it here.
 - Customer sell price is not on this order. The order records item and quantity only.
 
@@ -79,6 +79,8 @@ The requirements file for this feature was empty on the requirements branch. Thi
 - A pickup order does not store a delivery address.
 - Picking an order that is already `ready` shows `This order is already picked.`
 - Quantity of `0` or less shows `Quantity must be greater than zero.`
+- An unknown item number shows `No item found with that number.`
+- If quantity on hand drops before the pick is finished, the pick is blocked with `Not enough on hand.` and the status stays `pending`.
 
 ## Success Criteria
 
@@ -185,7 +187,7 @@ The order is shared. Private customer fields stay off the Office Staff and Wareh
 |--------|-----|---------------------|
 | Create an order, search customers | Office Staff, Manager | Customer ID and business name only |
 | Read delivery address | Not Office Staff on this feature | Stored for Feature 8 |
-| Pick | Warehouse Worker | Item number, description, bin, quantity |
+| Pick | Warehouse Worker, Manager | Item number, description, bin, quantity |
 | Create or pick | Not a Driver | — |
 
 Wrong role: `403` and `You do not have permission to perform this action.`
@@ -197,9 +199,9 @@ Base path: `/warehouse`. Auth: Bearer token. Errors: `{ "message": "..." }`.
 | Method | Path | Auth | Success | Errors |
 |--------|------|------|---------|--------|
 | GET | `/warehouse/customers/lookup?name=` | Yes | `200` array of `{ id, customerCode, businessName }` only | `403` |
-| POST | `/warehouse/orders` | Yes | `201` order without `deliveryAddress` for office staff | `400` `No customer found with that name.` or `That customer is not active.` or `Quantity must be greater than zero.` or `Not enough on hand.` or `Add at least one item.` · `403` |
+| POST | `/warehouse/orders` | Yes | `201` order without `deliveryAddress` for office staff | `400` `No customer found with that name.` or `That customer is not active.` or `No item found with that number.` or `Quantity must be greater than zero.` or `Not enough on hand.` or `Add at least one item.` · `403` |
 | GET | `/warehouse/orders?status=pending` | Yes | `200` orders; worker payload has lines only, no customer name | `403` |
-| POST | `/warehouse/orders/:id/pick` | Yes | `200` order with status `ready` | `400` `This order is already picked.` · `403` · `404` `No order found.` |
+| POST | `/warehouse/orders/:id/pick` | Yes | `200` order with status `ready` | `400` `This order is already picked.` or `Not enough on hand.` · `403` · `404` `No order found.` |
 
 The lookup is the only customer read Office Staff get. It must not select address, phone, or billing columns.
 
@@ -208,7 +210,7 @@ The lookup is the only customer read Office Staff get. It must not select addres
 | Screen | Route | Who | Picture |
 |--------|-------|-----|---------|
 | Customer orders | `/orders` | Office Staff, Manager | [customer-order.svg](../docs/ui/customer-order.svg) |
-| Pick | `/orders/:id/pick` | Warehouse Worker | [pick.svg](../docs/ui/pick.svg) |
+| Pick | `/orders/:id/pick` | Warehouse Worker, Manager | [pick.svg](../docs/ui/pick.svg) |
 
 - Office labels: **Customer name**, **Customer ID**, **Delivery** or **Pickup**, **Item number**, **Quantity**, button **Place order**. No address, phone, or billing fields.
 - Worker labels: **Item number**, **Bin**, **Quantity**, button **Finish pick**. No customer name.
