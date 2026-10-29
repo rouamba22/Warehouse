@@ -6,6 +6,7 @@
 **Created:** 2026-09-28
 **Input:** Workers need their own login so the warehouse can stop using paper and make sure people only see the screens they need for their job.
 **Depends on:** none
+**Related:** [ADR-0001](../docs/adr/0001-vue-express-mysql-stack.md), [ADR-0002](../docs/adr/0002-role-based-shared-warehouse-data.md), [ADR-0003](../docs/adr/0003-session-token-until-logout.md), [Login screen](../docs/ui/login.svg), [Staff screen](../docs/ui/staff.svg)
 
 ---
 
@@ -81,6 +82,32 @@
 
 ---
 
+## Assumptions
+
+- A first Manager account already exists so someone can log in and add the rest of the staff.
+- Employee ID is typed by the Manager. Workers do not sign themselves up.
+- A PIN is 4 to 6 digits.
+- The warehouse shares one system. Records are not private to one worker. The job role decides who can open a screen. See [ADR-0002](../docs/adr/0002-role-based-shared-warehouse-data.md).
+- Logging out ends the session on this device only. A session on another device stays until that device logs out.
+
+## Edge Cases
+
+- Two workers cannot have the same Employee ID. The second save is blocked.
+- A blank Employee ID or PIN does not log anyone in.
+- A wrong PIN and an unknown Employee ID show the same message, so the screen does not reveal which IDs exist.
+- Opening a locked link with no token sends the person to the login screen.
+- A Manager cannot turn off their own account from this feature.
+
+## Success Criteria
+
+- **SC-001**: A Manager can add a Warehouse Worker, and that worker can log in with the new Employee ID and PIN.
+- **SC-002**: A wrong PIN or unknown Employee ID shows `Invalid Employee ID or PIN.` and stays on the login screen.
+- **SC-003**: A Driver's menu shows only **Shipping & Delivery**.
+- **SC-004**: After refresh, the same worker is still logged in on the same screen.
+- **SC-005**: After **Log out**, a locked link sends the worker back to the login screen.
+
+---
+
 ## Key Entities
 
 - **Staff**: a warehouse worker's account; has an Employee ID, a PIN, a job role, and whether the account is turned on or off
@@ -96,7 +123,7 @@
 |-------|------|-------|
 | `id` | INTEGER PK | Auto-increment |
 | `employeeId` | STRING(20) | Required, unique |
-| `pin` | STRING(255) | Required; stored as a hash only |
+| `pin` | STRING(255) | Required; stored as a hash only; never returned by the API |
 | `firstName` | STRING(100) | Required |
 | `lastName` | STRING(100) | Required |
 | `role` | ENUM('manager','office_staff','warehouse_worker','driver') | Required |
@@ -107,14 +134,14 @@
 | Field | Type | Rules |
 |-------|------|-------|
 | `id` | INTEGER PK | Auto-increment |
-| `token` | STRING | Required, unique |
+| `token` | STRING(255) | Required, unique |
 | `staffId` | INTEGER FK | Required, references `staff.id` |
 | `createdAt` | DATETIME | Auto-set |
 
-Sessions do not expire automatically; a session is removed only when the staff member signs out.
+Sessions do not expire automatically; a session is removed only when the staff member signs out on that device.
 
 ### Associations
-- One `staff` account can have many `sessions` (e.g. signed in on more than one device).
+- One `staff` account can have many `sessions` (signed in on more than one device).
 
 ---
 
@@ -195,3 +222,66 @@ Sessions do not expire automatically; a session is removed only when the staff m
 * **Given** a worker account with Employee ID `EMP101` has been turned off
 * **When** I try to log in with Employee ID `EMP101` and its PIN
 * **Then** the system shows `This account has been deactivated.`
+
+---
+
+## Data Ownership
+
+Warehouse data is shared. A worker does not own their own private copy of staff records. The server checks the role on every request. See [ADR-0002](../docs/adr/0002-role-based-shared-warehouse-data.md).
+
+| Action | Who |
+|--------|-----|
+| Read the staff list | Manager |
+| Add a staff account | Manager |
+| Turn an account off | Manager, and not their own account |
+| Log in, refresh, log out | Any staff member, for their own session |
+| See another role's menu | Nobody |
+
+The API never returns `pin`. A wrong role gets `403` and `You do not have permission to perform this action.` A missing login gets `401` and the login screen. The UI hides Staff from every role except Manager, and the API still checks the role.
+
+## API Requirements
+
+Base path: `/warehouse`. Errors are `{ "message": "..." }`. Success returns the record itself, not a wrapper. The PIN hash is never in a response. Login and session check do not need a token. Every other route does. Send `Authorization: Bearer <token>`.
+
+| Method | Path | Auth | Success | Errors |
+|--------|------|------|---------|--------|
+| POST | `/warehouse/login` | No | `200` `{ token, employeeId, firstName, lastName, role }` | `400` `Please fill in all required fields.` · `401` `Invalid Employee ID or PIN.` · `403` `This account has been deactivated.` |
+| GET | `/warehouse/session` | Yes | `200` same staff fields as login, no token | `401` no session |
+| POST | `/warehouse/logout` | Yes | `200` `{ message: "Logged out." }` | `401` no session |
+| GET | `/warehouse/staff` | Yes | `200` array of staff, no `pin` | `401` · `403` permission message |
+| POST | `/warehouse/staff` | Yes | `201` the new staff row, no `pin` | `400` `Please fill in all required fields.` or `That Employee ID is already in use.` · `403` |
+| PATCH | `/warehouse/staff/:id/deactivate` | Yes | `200` staff row with `isActive: false` | `400` `You cannot turn off your own account.` · `403` · `404` `No staff member found.` |
+
+## Screen Requirements
+
+| Screen | Route | Who | Picture |
+|--------|-------|-----|---------|
+| Login | `/login` | Everyone who is logged out | [login.svg](../docs/ui/login.svg) |
+| Home | `/` | Logged-in staff; menu follows FR-005 | [home-manager.svg](../docs/ui/home-manager.svg), [home-driver.svg](../docs/ui/home-driver.svg) |
+| Staff | `/staff` | Manager | [staff.svg](../docs/ui/staff.svg) |
+
+- Login labels: **Employee ID**, **PIN**, button **Log in**.
+- Home shows the worker's name and a **Log out** button.
+- Staff screen labels: **Employee ID**, **First name**, **Last name**, **PIN**, **Role**, button **Add worker**, button **Turn off**.
+- Empty staff list: `No workers yet.`
+- Loading: `Loading...`
+- Wrong PIN stays on Login and shows `Invalid Employee ID or PIN.`
+- A locked link with no token goes to `/login`.
+- A locked link with the wrong role stays on Home and shows `You do not have permission to perform this action.`
+
+## Definition of Done
+
+*   [ ] Backend and frontend implemented per this spec (**FR-001** through **FR-009**)
+*   [ ] **Success Criteria (SC-001** through **SC-005)** met
+*   [ ] PIN is stored only as a hash and is never returned by the API
+*   [ ] Login does not expire until **Log out**
+*   [ ] `features/reference/data-model.md` updated for `staff` and `sessions`
+*   [ ] `features/reference/api.md` updated for the routes in this feature
+*   [ ] `features/reference/behavior.md` updated for role menus and the three error messages
+
+## Out of Scope
+
+*   Password or PIN reset
+*   Editing a worker's name, PIN, or role after they are added
+*   Turning an account back on
+*   Customer, supplier, item, order, inventory, and shipping screens (Features 2–8)

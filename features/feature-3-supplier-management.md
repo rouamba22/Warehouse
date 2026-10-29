@@ -6,6 +6,7 @@
 **Created:** 2026-09-28
 **Input:** The warehouse buys from suppliers and needs to store their info instead of keeping it on paper. Supplier info like terms and cost is private, so only the Manager can see or change it.
 **Depends on:** [Feature 1 — Staff Login and Access](feature-1-staff-login-access.md)
+**Related:** [ADR-0002](../docs/adr/0002-role-based-shared-warehouse-data.md), [Suppliers screen](../docs/ui/suppliers.svg)
 
 ---
 
@@ -71,6 +72,28 @@
 
 ---
 
+## Assumptions
+
+- Ship days are text, such as `Mon, Wed, Fri`. This feature does not build a calendar.
+- Terms are text, such as `Net 30`. This feature does not pay the supplier.
+- Minimum order amount is money, with two decimal places.
+- A deactivated supplier stays in the database so old supplier orders still have a name. Feature 5 blocks new orders to an inactive supplier.
+
+## Edge Cases
+
+- A missing required field shows `Please fill in all required fields.`
+- A duplicate business name is blocked.
+- A search with no match shows `No supplier found with that name.`
+- A minimum order amount of zero or less is blocked with `Minimum order amount must be greater than zero.`
+
+## Success Criteria
+
+- **SC-001**: A Manager can add supplier `Arizona` and find it by that name with address, ship days, terms, and minimum order amount showing.
+- **SC-002**: Office Staff who open `/suppliers` see `You do not have permission to perform this action.`
+- **SC-003**: Two suppliers cannot be saved with the business name `Arizona`.
+
+---
+
 ## Key Entities
 
 - **Supplier**: a business the warehouse buys items from; has a business name, an address, ship days, payment terms, a minimum order amount, and whether it is active or deactivated
@@ -87,9 +110,13 @@
 | `address` | STRING(255) | Required |
 | `shipDays` | STRING(100) | Required (example: "Mon, Wed, Fri") |
 | `terms` | STRING(100) | Required (example: "Net 30") |
-| `minOrderAmount` | DECIMAL(10,2) | Required |
+| `minOrderAmount` | DECIMAL(10,2) | Required; must be greater than 0 |
 | `isActive` | BOOLEAN | Required; default `true` |
 | `createdAt` | DATETIME | Auto-set |
+
+### Associations
+- One `supplier` can supply many `items` (Feature 4).
+- One `supplier` can have many `supplier_orders` (Feature 5).
 
 ---
 
@@ -141,3 +168,54 @@
 * **Given** I am logged in as Office Staff
 * **When** I try to open Supplier Management directly by its link
 * **Then** the system blocks it and shows `You do not have permission to perform this action.`
+
+---
+
+## Data Ownership
+
+Supplier address, ship days, terms, and minimum order amount are Manager-only. Warehouse Workers receive goods in Feature 5 without opening this screen.
+
+| Action | Who |
+|--------|-----|
+| Read, add, edit, deactivate a supplier | Manager |
+| Open `/suppliers` | Manager |
+
+A non-Manager call gets `403` and `You do not have permission to perform this action.` The UI hides **Suppliers** from every role except Manager.
+
+## API Requirements
+
+Base path: `/warehouse`. Auth: Bearer token. Errors: `{ "message": "..." }`.
+
+| Method | Path | Auth | Success | Errors |
+|--------|------|------|---------|--------|
+| GET | `/warehouse/suppliers?name=` | Yes | `200` array of suppliers | `403` |
+| GET | `/warehouse/suppliers/:id` | Yes | `200` one supplier | `403` · `404` `No supplier found with that name.` |
+| POST | `/warehouse/suppliers` | Yes | `201` the new supplier | `400` `Please fill in all required fields.` or `That business name is already in use.` or `Minimum order amount must be greater than zero.` · `403` |
+| PUT | `/warehouse/suppliers/:id` | Yes | `200` updated supplier | `400` same messages · `403` · `404` |
+| PATCH | `/warehouse/suppliers/:id/deactivate` | Yes | `200` supplier with `isActive: false` | `403` · `404` |
+
+## Screen Requirements
+
+| Screen | Route | Who | Picture |
+|--------|-------|-----|---------|
+| Suppliers | `/suppliers` | Manager | [suppliers.svg](../docs/ui/suppliers.svg) |
+
+- Labels: **Business name**, **Address**, **Ship days**, **Terms**, **Minimum order amount**, button **Add supplier**, button **Search**, button **Save**, button **Deactivate**.
+- Empty list: `No suppliers yet.`
+- No search match: `No supplier found with that name.`
+- Loading: `Loading...`
+- A missing field shows `Please fill in all required fields.`
+
+## Definition of Done
+
+*   [ ] Backend and frontend implemented per this spec (**FR-001** through **FR-008**)
+*   [ ] **Success Criteria (SC-001** through **SC-003)** met
+*   [ ] Non-Manager requests get `403`
+*   [ ] `features/reference/data-model.md`, `api.md`, and `behavior.md` updated for suppliers
+
+## Out of Scope
+
+*   Turning a supplier back on
+*   Paying a supplier
+*   Creating a supplier order or receiving a shipment ([Feature 5](feature-5-supplier-ordering-receiving.md))
+*   Item cost ([Feature 4](feature-4-item-product-catalog-management.md))
