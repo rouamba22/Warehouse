@@ -16,7 +16,14 @@ No application code may be written unless it maps to a requirement in one of the
 
 | ID | File | Branch | Depends on |
 |----|------|--------|------------|
-| — | *Add `feature-1-….md` before implementation* | `feature/1-…` | — |
+| 1 | [feature-1-staff-login-access.md](./feature-1-staff-login-access.md) | `feature/1-staff-login-access` | — |
+| 2 | [feature-2-customer-management.md](./feature-2-customer-management.md) | `feature/2-customer-management` | Feature 1 |
+| 3 | [feature-3-supplier-management.md](./feature-3-supplier-management.md) | `feature/3-supplier-management` | Feature 1 |
+| 4 | [feature-4-item-product-catalog-management.md](./feature-4-item-product-catalog-management.md) | `feature/4-item-product-catalog-management` | Feature 1, Feature 3 |
+| 5 | [feature-5-supplier-ordering-receiving.md](./feature-5-supplier-ordering-receiving.md) | `feature/5-supplier-ordering-receiving` | Feature 1, Feature 3, Feature 4 |
+| 6 | [feature-6-customer-order-management.md](./feature-6-customer-order-management.md) | `feature/6-customer-order-management` | Feature 1, Feature 2, Feature 4 |
+| 7 | [feature-7-inventory-count-adjustment.md](./feature-7-inventory-count-adjustment.md) | `feature/7-inventory-count-adjustment` | Feature 1, Feature 4 |
+| 8 | [feature-8-shipping-delivery.md](./feature-8-shipping-delivery.md) | `feature/8-shipping-delivery` | Feature 1, Feature 6 |
 
 New features: follow [framework.md](./framework.md#feature-spec-template) — **Status**, **Input**, **FR-00N**, **SC-00N**, **Key Entities**, Gherkin, **Agent implementation request**, **Definition of Done**.
 
@@ -34,9 +41,20 @@ Keep snapshots in sync when schema, API, or product rules change — **in the sa
 | [reference/api.md](./reference/api.md) | Current REST API (update in feature PR when API changes) |
 | [reference/behavior.md](./reference/behavior.md) | Current product rules (update in feature PR when rules change) |
 
+## Design draft
+
+This branch (`design-draft`) adds design sections to each feature: Assumptions, Edge Cases, Success Criteria, Data Ownership, API Requirements, Screen Requirements, Definition of Done, and Out of Scope. Test Coverage Map and the Agent implementation request are not part of this draft.
+
+Features 2, 4, 5, 6, and 7 had empty files on the requirements branch. Those files now include the requirements and the design so later features have something to depend on.
+
+Screen pictures: [docs/ui/README.md](../docs/ui/README.md).  
+C4 diagrams: [docs/architecture/README.md](../docs/architecture/README.md).
+
 ## Related
 
 - Cursor rules: `.cursor/rules/`
 - ADRs: `docs/adr/`
 - Quality attributes (NFRs): `docs/nfr/`
+- UI screens: `docs/ui/`
+- C4 diagrams: `docs/architecture/`
 - Starter kit notes: `docs/STARTER-KIT.md`

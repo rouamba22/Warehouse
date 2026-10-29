@@ -84,4 +84,7 @@ What we chose, in one or two sentences.
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| — | *Add ADR-0001 when you make the first cross-cutting architecture choice* | — |
+| [0001](0001-vue-express-mysql-stack.md) | Vue, Express, and MySQL stack | Accepted |
+| [0002](0002-role-based-shared-warehouse-data.md) | Role-based shared warehouse data | Accepted |
+| [0003](0003-session-token-until-logout.md) | Session token until logout | Accepted |
+| [0004](0004-inventory-quantity-changes.md) | Inventory quantity changes | Accepted |
