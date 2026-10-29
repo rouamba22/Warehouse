@@ -1,0 +1,28 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="c4-context" name="System Context">
+    <mxGraphModel dx="1100" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="C4 System Context — Warehouse" style="text;html=1;fontSize=20;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="480" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="staff" value="Warehouse staff&#10;[Person]&#10;Manager, Office Staff,&#10;Warehouse Worker, Driver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#083F75;fontColor=#ffffff;strokeColor=#052C53;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="220" width="220" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="sys" value="Warehouse System&#10;[Software System]&#10;Login, customers, suppliers,&#10;items, orders, inventory, shipping" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#ffffff;strokeColor=#0B4884;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="430" y="200" width="260" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext" value="Customers and suppliers&#10;[External]&#10;Not users of this system.&#10;Staff type their records in." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;fontColor=#ffffff;strokeColor=#6c6c6c;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="820" y="220" width="230" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="Uses in a browser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" edge="1" parent="1" source="staff" target="sys">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Stores records about" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" edge="1" parent="1" source="sys" target="ext">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
